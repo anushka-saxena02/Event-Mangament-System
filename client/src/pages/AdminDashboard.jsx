@@ -14,6 +14,8 @@ const AdminDashboard = () => {
   const [image ,setImage]=useState(null);
   const[allEvents,setAllEvents]=useState([]);
   const[showModal,setShowMoadal]=useState(false)
+  const[isEditing,setIsEditing]=useState(false);
+  const[editId,setEditId]=useState(null);
   const fetchEvent=async()=>{
     try{
     const res=await axios.get('http://localhost:5000/api/events/all')
@@ -26,6 +28,23 @@ const AdminDashboard = () => {
     fetchEvent()
   },[]);
 
+  
+    const handleEdit =(ev)=>{
+    setEventData({
+      title:ev.title,
+      location:ev.location,
+      price:ev.price,
+      seats:ev.seats,
+      description:ev.description,
+      date:ev.date.split('T')[0],
+      image:ev.image
+    
+      
+    })
+    setIsEditing(true)
+    setEditId(ev._id);
+    window.scrollTo({top:0,behavior:'smooth'})
+  }
   const handleSubmit = async(e) => {
     e.preventDefault();
     const data =new FormData();
@@ -36,17 +55,39 @@ const AdminDashboard = () => {
     data.append('description', eventData.description);
     data.append('date', eventData.date);
     data.append('image', image);
-    try {
-      const res = await axios.post('http://localhost:5000/api/events/create', data);
-      if (res.data.success) {
-        alert("New Event Created Successfully!");
-        setShowMoadal(true)
-        fetchEvent();
+    try{
+      let res;
+      if(isEditing){
+        res = await axios.put(`http://localhost:5000/api/events/update/${editId}`,data)
+      }else{
+        res=await axios.post("http://localhost:5000/api/events/create",data)
       }
-    } catch (err) {
-      alert("Error: " + (err.response?.data?.message || "Event not created"));
+      if(res.data.success){
+        alert(isEditing ? "Event Updated is successfully..!":"New Event is created ..!")
+        setIsEditing(false)
+        setEditId(null);
+        setEventData({title:"",location:"",price:"",seats:"",description:"", date:""})
+        setImage(null);
+        fetchEvent()
+      }
+    }catch(err){
+       window("Event update is failed")
     }
   };
+  const handleDelete=async(id)=>{
+    if(window.confirm("Are You sure you want to delete this event...!"))
+      try{
+    const res=await axios.delete(`http://localhost:5000/api/events/delete/${id}`);
+    if(res.data.success){
+      alert("Event deleted successfully...!")
+      fetchEvent();
+    }
+    }catch(err){
+      alert("Error:" ,+(err.response?.data?.message || "Delete Failed") )
+    }
+
+  }
+  
     return (
     <div className="pt-32 px-10 min-h-screen bg-[#0a0a0a] text-white">
       <div className="mb-12">
@@ -57,13 +98,14 @@ const AdminDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
     
         <div className="bg-zinc-900 p-8 rounded-[2.5rem] border border-zinc-800">
-          <h2 className="text-2xl font-bold mb-6 text-cyan-400">Create New Event</h2>
+          <h2 className="text-2xl font-bold mb-6 text-cyan-400">{isEditing?"Upadte Event Details" :"Create Event"}</h2>
           
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Event Title</label>
               <input 
                 type="text" 
+                value={eventData.title}
                 required
                 className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none transition-all"
                 placeholder="Event Title"
@@ -74,6 +116,7 @@ const AdminDashboard = () => {
               <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Event Location</label>
               <input 
                 type="text" 
+                value={eventData.location}
                 required
                 className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none transition-all"
                 placeholder="Enter location"
@@ -87,6 +130,7 @@ const AdminDashboard = () => {
                 <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Price ($)</label>
                 <input 
                   type="number" 
+                  value={eventData.price}
                   className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none"
                   onChange={(e) => setEventData({...eventData, price: e.target.value})}
                 />
@@ -94,7 +138,8 @@ const AdminDashboard = () => {
               <div>
                 <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Total Seats</label>
                 <input 
-                  type="number" 
+                  type="number"
+                  value={eventData.seats}
                   className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none"
                   onChange={(e) => setEventData({...eventData, seats: e.target.value})}
                 />
@@ -104,6 +149,7 @@ const AdminDashboard = () => {
               <input 
                 type="date" 
                 required
+                value={eventData.date}
                 className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none transition-all"
                 placeholder="Event date "
                 onChange={(e) => setEventData({...eventData, date: e.target.value})}
@@ -114,6 +160,7 @@ const AdminDashboard = () => {
                 required
                 className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none transition-all"
                 placeholder="Description"
+                value={eventData.description}
                 onChange={(e) => setEventData({...eventData, description: e.target.value})}
               ></textarea>
             </div>
@@ -121,8 +168,24 @@ const AdminDashboard = () => {
             </div>
               <div>
               <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Event Image</label>
+            
+                  <div className="flex gap-4 items-end mb-4">
+                   {isEditing && !image && eventData.image && (
+                    <div>
+                  <label className="text-[10px] text-zinc-500 uppercase mb-2 block">Current Image</label>
+                        <img src={`http://localhost:5000/uploads/${eventData.image}`} className="w-20 h-20 object-cover rounded-lg border border-zinc-800"alt="Old"     />
+                        </div>
+                               )}
+                         {image && (
+                          <div>
+                        <label className="text-[10px] text-cyan-400 uppercase mb-2 block">New Selection</label>
+                         <img src={URL.createObjectURL(image)} className="w-20 h-20 object-cover rounded-lg border border-cyan-400"alt="New"/>
+                         </div>
+                              )}
+                          </div>
               <input 
                 type="file" 
+                
                 required
                 className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none transition-all"
                 placeholder="e.g. Tech Conference 2026"
@@ -147,7 +210,8 @@ const AdminDashboard = () => {
           <th className="p-6">Event Name</th>
           <th className="p-6">Price</th>
           <th className="p-6">location</th>
-          <th className="p-6">Actions</th>
+          <th className="p-6">Available Seats</th>
+          <th className='p-6'>Action</th>
         </tr>
       </thead>
    <tbody className="divide-y divide-zinc-800">
@@ -157,6 +221,14 @@ const AdminDashboard = () => {
                   <td className="p-6 text-cyan-400">${ev.price}</td>
                   <td className='p-6 text-zinc-400'>{ev.location}</td>
                   <td className="p-6 text-zinc-400">{ev.availableSeats}</td>
+                  <td className='p-6 '>
+                    <div className='flex gap-3'>
+                    <button onClick={()=>handleEdit(ev)} className='px-4 py-2 bg-cyan-500/10 text-cyan-400 rounded-lg hover:bg-cyan-500
+                    hover:text-white transition-all text-xs font-bold'>EDIT</button>
+                  <button onClick={()=>handleDelete(ev._id)} className='px-4 py-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500
+                    hover:text-white transition-all text-xs font-bold'>DELETE</button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>   
