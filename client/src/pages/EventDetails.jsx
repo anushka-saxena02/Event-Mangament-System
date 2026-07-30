@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import {  AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion'; // FIXED: Added 'motion' import
 import { useParams } from 'react-router-dom'; 
 import axios from 'axios';
 import BookingForm from '../Component/BookingForm';
@@ -10,13 +10,14 @@ const EventDetails = () => {
   const [showBooking, setShowBooking] = useState(false);
   const [tickets, setTickets] = useState(1);
 
-  
+  const BASE_URL = 'https://event-mangament-system-4.onrender.com';
+
   useEffect(() => {
     const fetchEventData = async () => {
       try {
-        if(!id)return;
-        const res = await axios.get(`https://event-mangament-system-4.onrender.com/api/events/${id}`);
-        setEvent(res.data.data ||res.data);
+        if (!id) return;
+        const res = await axios.get(`${BASE_URL}/api/events/${id}`);
+        setEvent(res.data.data || res.data);
       } catch (err) {
         console.error("Error fetching event details:", err);
       }
@@ -24,7 +25,7 @@ const EventDetails = () => {
     fetchEventData();
   }, [id]);
 
-  if (!event) return <div className="pt-40 text-center text-white">Loading Event...</div>;
+  if (!event) return <div className="pt-40 text-center text-white font-mono">Loading Event Details...</div>;
 
   return (
     <div className="pt-32 px-6 md:px-20 bg-black text-white min-h-screen">
@@ -32,29 +33,31 @@ const EventDetails = () => {
         
         <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}>
           <span className="text-cyan-400 font-mono text-sm uppercase tracking-widest">Event Details</span>
-          <h1 className="text-5xl font-black uppercase mt-4 mb-6 leading-tight">{event.title}</h1>
+          <h1 className="text-4xl md:text-5xl font-black uppercase mt-4 mb-6 leading-tight">{event.title}</h1>
           
           <div className="flex gap-8 mb-8 text-zinc-400 font-medium uppercase text-sm">
             <p>📍 {event.location}</p>
-            <p>📅 {event.date}</p>
+            <p>📅 {event.date ? event.date.split('T')[0] : 'Upcoming'}</p>
           </div>
 
-          <p className="text-zinc-500 text-lg leading-relaxed mb-10">{event.description}</p>
+          <p className="text-zinc-400 text-base md:text-lg leading-relaxed mb-10">{event.description}</p>
 
-    
-          <div className="w-full h-80 bg-zinc-900 rounded-[3rem] overflow-hidden relative border border-zinc-800">
+          <div className="w-full h-80 bg-zinc-900 rounded-[2.5rem] overflow-hidden relative border border-zinc-800">
             <img 
-              src={`http://localhost:5000/uploads/${event.image}`} 
-              className="w-full h-full object-cover opacity-60" 
-              alt="Event Venue" 
+              src={`${BASE_URL}/uploads/${event.image}`} 
+              onError={(e) => {
+                // FIXED: Fallback image if render file is missing
+                e.target.src = 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=1000&auto=format&fit=crop';
+              }}
+              className="w-full h-full object-cover opacity-80" 
+              alt={event.title} 
             />
           </div>
         </motion.div>
 
-      
         <motion.div 
           initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-zinc-900 p-10 rounded-[3rem] border border-zinc-800 h-fit sticky top-32"
+          className="bg-zinc-900 p-8 md:p-10 rounded-[2.5rem] border border-zinc-800 h-fit sticky top-32"
         >
           <div className="flex justify-between items-center mb-10">
             <h3 className="text-2xl font-bold">Select Tickets</h3>
@@ -86,11 +89,10 @@ const EventDetails = () => {
         </motion.div>
       </div>
 
-      
       <AnimatePresence>
         {showBooking && (
           <BookingForm 
-            event={{...event, price: event.price * tickets,selectedTickets:tickets}} 
+            event={{...event, price: event.price * tickets, selectedTickets: tickets}} 
             onClose={() => setShowBooking(false)} 
           />
         )}
