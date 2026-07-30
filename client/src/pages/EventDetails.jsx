@@ -15,7 +15,7 @@ const EventDetails = () => {
     const fetchEventData = async () => {
       try {
         if(!id)return;
-        const res = await axios.get(`http://localhost:5000/api/events/${id}`);
+        const res = await axios.get(`https://event-mangament-system-4.onrender.com/api/events/${id}`);
         setEvent(res.data.data ||res.data);
       } catch (err) {
         console.error("Error fetching event details:", err);
