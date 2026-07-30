@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
@@ -24,7 +23,7 @@ const EventList = () => {
         <div key={event._id} className=" max-w-2xl  group bg-zinc-900 rounded-3xl overflow-hidden border mt-40 border-zinc-800">
 
           <img 
-            src={`http://localhost:5000/uploads/${event.image}`} 
+            src={`https://event-mangament-system-4.onrender.com/uploads/${event.image}`} 
             alt={event.title} 
             className="w-full h-48 object-cover" 
           />
