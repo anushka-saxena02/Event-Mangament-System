@@ -227,17 +227,6 @@ const AdminDashboard = () => {
           </form>
         </div>
 
-        {/* INSTRUCTIONS & TABLE */}
-        <div className="flex flex-col justify-between space-y-8">
-          <div className="border-l-2 border-zinc-800 pl-6">
-            <h3 className="text-lg font-bold mb-2">Quick Instructions</h3>
-            <ul className="text-zinc-500 space-y-2 text-xs sm:text-sm">
-              <li>• Fill all details to make the event live.</li>
-              <li>• Total seats will be updated in real-time.</li>
-              <li>• You can delete or edit events anytime from the list below.</li>
-            </ul>
-          </div>
-
           <SuccessModal isOpen={showModal} onClose={() => setShowModal(false)} />
         </div>
       </div>
@@ -279,6 +268,18 @@ const AdminDashboard = () => {
           </table>
         </div>
       </div>
+                {/* INSTRUCTIONS & TABLE */}
+        <div className="flex flex-col justify-between space-y-8">
+          <div className="border-l-2 border-zinc-800 pl-6">
+            <h3 className="text-lg font-bold mb-2">Quick Instructions</h3>
+            <ul className="text-zinc-500 space-y-2 text-xs sm:text-sm">
+              <li>• Fill all details to make the event live.</li>
+              <li>• Total seats will be updated in real-time.</li>
+              <li>• You can delete or edit events anytime from the list below.</li>
+            </ul>
+          </div>
+
+
     </div>
   );
 };
