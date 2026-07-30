@@ -20,7 +20,7 @@ const handleBooking =async(e)=>{
       totalPaid: event.price 
     };
     try {
-      const res = await axios.post('http://localhost:5000/api/booking/confirm', bookingData);
+      const res = await axios.post('https://event-mangament-system-4.onrender.com/api/booking/confirm', bookingData);
       
       if (res.data.success) {
         setShowSuccess(true);
