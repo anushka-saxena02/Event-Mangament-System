@@ -18,7 +18,7 @@ const AdminDashboard = () => {
   const[editId,setEditId]=useState(null);
   const fetchEvent=async()=>{
     try{
-    const res=await axios.get('http://localhost:5000/api/events/all')
+    const res=await axios.get('https://event-mangament-system-4.onrender.com/api/events/all')
     setAllEvents(res.data.data);
     }catch(err){
     console.error("error",err)
@@ -58,9 +58,9 @@ const AdminDashboard = () => {
     try{
       let res;
       if(isEditing){
-        res = await axios.put(`http://localhost:5000/api/events/update/${editId}`,data)
+        res = await axios.put(`https://event-mangament-system-4.onrender.com/api/events/update/${editId}`,data)
       }else{
-        res=await axios.post("http://localhost:5000/api/events/create",data)
+        res=await axios.post("https://event-mangament-system-4.onrender.com/api/events/create",data)
       }
       if(res.data.success){
         alert(isEditing ? "Event Updated is successfully..!":"New Event is created ..!")
