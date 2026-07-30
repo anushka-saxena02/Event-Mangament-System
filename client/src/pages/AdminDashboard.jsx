@@ -1,5 +1,5 @@
 import axios from 'axios';
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import SuccessModal from '../Component/SuccessModal';
 
 const AdminDashboard = () => {
@@ -8,246 +8,275 @@ const AdminDashboard = () => {
     location: '',
     price: '',
     seats: '',
-    description:'',
-    date:''
+    description: '',
+    date: ''
   });
-  const [image ,setImage]=useState(null);
-  const[allEvents,setAllEvents]=useState([]);
-  const[showModal,setShowMoadal]=useState(false)
-  const[isEditing,setIsEditing]=useState(false);
-  const[editId,setEditId]=useState(null);
-  const fetchEvent=async()=>{
-    try{
-    const res=await axios.get('https://event-mangament-system-4.onrender.com/api/events/all')
-    setAllEvents(res.data.data);
-    }catch(err){
-    console.error("error",err)
+  const [image, setImage] = useState(null);
+  const [allEvents, setAllEvents] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
+
+  const BASE_URL = 'https://event-mangament-system-4.onrender.com';
+
+  const fetchEvent = async () => {
+    try {
+      const res = await axios.get(`${BASE_URL}/api/events/all`);
+      setAllEvents(res.data.data);
+    } catch (err) {
+      console.error("error", err);
     }
-  }
-  useEffect(()=>{
+  };
 
-    fetchEvent()
-  },[]);
+  useEffect(() => {
+    fetchEvent();
+  }, []);
 
-  
-    const handleEdit =(ev)=>{
+  const handleEdit = (ev) => {
     setEventData({
-      title:ev.title,
-      location:ev.location,
-      price:ev.price,
-      seats:ev.seats,
-      description:ev.description,
-      date:ev.date.split('T')[0],
-      image:ev.image
-    
-      
-    })
-    setIsEditing(true)
+      title: ev.title,
+      location: ev.location,
+      price: ev.price,
+      seats: ev.availableSeats || ev.seats,
+      description: ev.description,
+      date: ev.date ? ev.date.split('T')[0] : '',
+      image: ev.image
+    });
+    setIsEditing(true);
     setEditId(ev._id);
-    window.scrollTo({top:0,behavior:'smooth'})
-  }
-  const handleSubmit = async(e) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const data =new FormData();
+    const data = new FormData();
     data.append('title', eventData.title);
     data.append('location', eventData.location);
     data.append('price', eventData.price);
     data.append('seats', eventData.seats);
     data.append('description', eventData.description);
     data.append('date', eventData.date);
-    data.append('image', image);
-    try{
-      let res;
-      if(isEditing){
-        res = await axios.put(`https://event-mangament-system-4.onrender.com/api/events/update/${editId}`,data)
-      }else{
-        res=await axios.post("https://event-mangament-system-4.onrender.com/api/events/create",data)
-      }
-      if(res.data.success){
-          alert(isEditing ? "Event Updated is successfully..!":"New Event is created ..!")
-        setIsEditing(false)
-        setEditId(null);
-        setEventData({title:"",location:"",price:"",seats:"",description:"", date:""})
-        setImage(null);
-        fetchEvent()
-        setShowMoadal(true);
+    if (image) {
+      data.append('image', image);
+    }
 
+    try {
+      let res;
+      if (isEditing) {
+        res = await axios.put(`${BASE_URL}/api/events/update/${editId}`, data);
+      } else {
+        res = await axios.post(`${BASE_URL}/api/events/create`, data);
       }
-    }catch(err){
-       alert( "Event update is failed")
-       console.error(err)
+      if (res.data.success) {
+        alert(isEditing ? "Event Updated successfully..!" : "New Event created..!");
+        setIsEditing(false);
+        setEditId(null);
+        setEventData({ title: "", location: "", price: "", seats: "", description: "", date: "" });
+        setImage(null);
+        fetchEvent();
+        setShowModal(true);
+      }
+    } catch (err) {
+      alert("Event operation failed");
+      console.error(err);
     }
   };
-  const handleDelete=async(id)=>{
-    if(window.confirm("Are You sure you want to delete this event...!"))
-      try{
-    const res=await axios.delete(`https://event-mangament-system-4.onrender.com/api/events/delete/${id}`);
-    if(res.data.success){
-      alert("Event deleted successfully...!")
-      fetchEvent();
-    }
-    }catch(err){
-      alert("Error:" ,+(err.response?.data?.message || "Delete Failed") )
-    }
 
-  }
-  
-    return (
-    <div className="pt-32 px-10 min-h-screen bg-[#0a0a0a] text-white">
-      <div className="mb-12">
-        <h1 className="text-4xl font-black uppercase tracking-tight">Admin Panel</h1>
-        <p className="text-zinc-500 mt-2">Manage your events and bookings here.</p>
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this event...?")) {
+      try {
+        const res = await axios.delete(`${BASE_URL}/api/events/delete/${id}`);
+        if (res.data.success) {
+          alert("Event deleted successfully...!");
+          fetchEvent();
+        }
+      } catch (err) {
+        alert("Error: " + (err.response?.data?.message || "Delete Failed"));
+      }
+    }
+  };
+
+  return (
+    <div className="pt-24 sm:pt-32 px-4 sm:px-10 min-h-screen bg-[#0a0a0a] text-white">
+      <div className="mb-8 sm:mb-12">
+        <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">Admin Panel</h1>
+        <p className="text-zinc-500 mt-2 text-sm">Manage your events and bookings here.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-    
-        <div className="bg-zinc-900 p-8 rounded-[2.5rem] border border-zinc-800">
-          <h2 className="text-2xl font-bold mb-6 text-cyan-400">{isEditing?"Upadte Event Details" :"Create Event"}</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        
+        {/* EVENT FORM */}
+        <div className="bg-zinc-900 p-6 sm:p-8 rounded-[2rem] border border-zinc-800">
+          <h2 className="text-xl sm:text-2xl font-bold mb-6 text-cyan-400">
+            {isEditing ? "Update Event Details" : "Create Event"}
+          </h2>
           
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             <div>
               <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Event Title</label>
               <input 
                 type="text" 
                 value={eventData.title}
                 required
-                className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none transition-all"
+                className="w-full bg-black border border-zinc-800 p-3.5 sm:p-4 rounded-xl focus:border-cyan-500 outline-none text-sm"
                 placeholder="Event Title"
-                onChange={(e) => setEventData({...eventData, title: e.target.value})}
+                onChange={(e) => setEventData({ ...eventData, title: e.target.value })}
               />
             </div>
-              <div>
+
+            <div>
               <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Event Location</label>
               <input 
                 type="text" 
                 value={eventData.location}
                 required
-                className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none transition-all"
+                className="w-full bg-black border border-zinc-800 p-3.5 sm:p-4 rounded-xl focus:border-cyan-500 outline-none text-sm"
                 placeholder="Enter location"
-                onChange={(e) => setEventData({...eventData, location: e.target.value})}
+                onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
               />
             </div>
 
-
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Price ($)</label>
                 <input 
                   type="number" 
                   value={eventData.price}
-                  className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none"
-                  onChange={(e) => setEventData({...eventData, price: e.target.value})}
+                  required
+                  className="w-full bg-black border border-zinc-800 p-3.5 sm:p-4 rounded-xl focus:border-cyan-500 outline-none text-sm"
+                  onChange={(e) => setEventData({ ...eventData, price: e.target.value })}
                 />
               </div>
+
               <div>
                 <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Total Seats</label>
                 <input 
                   type="number"
                   value={eventData.seats}
-                  className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none"
-                  onChange={(e) => setEventData({...eventData, seats: e.target.value})}
+                  required
+                  className="w-full bg-black border border-zinc-800 p-3.5 sm:p-4 rounded-xl focus:border-cyan-500 outline-none text-sm"
+                  onChange={(e) => setEventData({ ...eventData, seats: e.target.value })}
                 />
               </div>
-                <div>
+            </div>
+
+            <div>
               <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Date</label>
               <input 
                 type="date" 
                 required
                 value={eventData.date}
-                className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none transition-all"
-                placeholder="Event date "
-                onChange={(e) => setEventData({...eventData, date: e.target.value})}
+                className="w-full bg-black border border-zinc-800 p-3.5 sm:p-4 rounded-xl focus:border-cyan-500 outline-none text-sm"
+                onChange={(e) => setEventData({ ...eventData, date: e.target.value })}
               />
             </div>
+
             <div>
+              <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Description</label>
               <textarea 
                 required
-                className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none transition-all"
+                rows="3"
+                className="w-full bg-black border border-zinc-800 p-3.5 sm:p-4 rounded-xl focus:border-cyan-500 outline-none text-sm"
                 placeholder="Description"
                 value={eventData.description}
-                onChange={(e) => setEventData({...eventData, description: e.target.value})}
+                onChange={(e) => setEventData({ ...eventData, description: e.target.value })}
               ></textarea>
             </div>
 
-            </div>
-              <div>
+            <div>
               <label className="text-xs uppercase tracking-widest text-zinc-500 block mb-2">Event Image</label>
-            
-                  <div className="flex gap-4 items-end mb-4">
-                   {isEditing && !image && eventData.image && (
-                    <div>
-           <label className="text-[10px] text-zinc-500 uppercase mb-2 block">Current Image</label>
-                        <img src={`http://localhost:5000/uploads/${eventData.image}`} className="w-20 h-20 object-cover rounded-lg border border-zinc-800"alt="Old"     />
-                        </div>
-                               )}
-                         {image && (
-                          <div>
-                        <label className="text-[10px] text-cyan-400 uppercase mb-2 block">New Selection</label>
-                         <img src={URL.createObjectURL(image)} className="w-20 h-20 object-cover rounded-lg border border-cyan-400"alt="New"/>
-                         </div>
-                              )}
-                          </div>
+              
+              <div className="flex gap-4 items-end mb-3">
+                {isEditing && !image && eventData.image && (
+                  <div>
+                    <label className="text-[10px] text-zinc-500 uppercase mb-1 block">Current Image</label>
+                    <img 
+                      src={`${BASE_URL}/uploads/${eventData.image}`} 
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=200&auto=format&fit=crop';
+                      }}
+                      className="w-16 h-16 object-cover rounded-lg border border-zinc-800" 
+                      alt="Old"     
+                    />
+                  </div>
+                )}
+
+                {image && (
+                  <div>
+                    <label className="text-[10px] text-cyan-400 uppercase mb-1 block">New Selection</label>
+                    <img 
+                      src={URL.createObjectURL(image)} 
+                      className="w-16 h-16 object-cover rounded-lg border border-cyan-400" 
+                      alt="New"
+                    />
+                  </div>
+                )}
+              </div>
+
               <input 
                 type="file" 
-                
-                required
-                className="w-full bg-black border border-zinc-800 p-4 rounded-2xl focus:border-cyan-500 outline-none transition-all"
-                placeholder="e.g. Tech Conference 2026"
+                required={!isEditing}
+                className="w-full bg-black border border-zinc-800 p-3 rounded-xl focus:border-cyan-500 outline-none text-xs text-zinc-400"
                 onChange={(e) => setImage(e.target.files[0])}
               />
             </div>
 
-
-            <button type="submit" className="w-full py-4 bg-white text-black font-black rounded-full uppercase tracking-widest hover:bg-cyan-400 transition-all mt-4">
-              Publish Event
+            <button type="submit" className="w-full py-4 bg-white text-black font-black rounded-full uppercase tracking-widest hover:bg-cyan-400 transition-all text-xs sm:text-sm mt-4">
+              {isEditing ? "Update Event" : "Publish Event"}
             </button>
           </form>
         </div>
-        <SuccessModal isOpen={showModal} onClose={()=>setShowMoadal(false)}/>
-        
-<div className="mt-20">
-  <h2 className="text-2xl font-bold mb-8 uppercase tracking-widest">Manage Live Events</h2>
-  <div className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden">
-    <table className="w-full text-left">
-      <thead className="bg-zinc-800/50 text-zinc-500 text-[10px] uppercase tracking-[0.2em]">
-        <tr>
-          <th className="p-6">Event Name</th>
-          <th className="p-6">Price</th>
-          <th className="p-6">location</th>
-          <th className="p-6">Available Seats</th>
-          <th className='p-6'>Action</th>
-        </tr>
-      </thead>
-   <tbody className="divide-y divide-zinc-800">
+
+        {/* INSTRUCTIONS & TABLE */}
+        <div className="flex flex-col justify-between space-y-8">
+          <div className="border-l-2 border-zinc-800 pl-6">
+            <h3 className="text-lg font-bold mb-2">Quick Instructions</h3>
+            <ul className="text-zinc-500 space-y-2 text-xs sm:text-sm">
+              <li>• Fill all details to make the event live.</li>
+              <li>• Total seats will be updated in real-time.</li>
+              <li>• You can delete or edit events anytime from the list below.</li>
+            </ul>
+          </div>
+
+          <SuccessModal isOpen={showModal} onClose={() => setShowModal(false)} />
+        </div>
+      </div>
+
+      {/* EVENT TABLE SECTION */}
+      <div className="mt-16 pb-12">
+        <h2 className="text-xl sm:text-2xl font-bold mb-6 uppercase tracking-widest">Manage Live Events</h2>
+        <div className="bg-zinc-900 rounded-2xl border border-zinc-800 overflow-x-auto">
+          <table className="w-full text-left min-w-[600px]">
+            <thead className="bg-zinc-800/50 text-zinc-500 text-[10px] uppercase tracking-[0.2em]">
+              <tr>
+                <th className="p-4 sm:p-6">Event Name</th>
+                <th className="p-4 sm:p-6">Price</th>
+                <th className="p-4 sm:p-6">Location</th>
+                <th className="p-4 sm:p-6">Available Seats</th>
+                <th className="p-4 sm:p-6">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800 text-sm">
               {allEvents.map((ev) => (
                 <tr key={ev._id}>
-                  <td className="p-6 font-bold">{ev.title}</td>
-                  <td className="p-6 text-cyan-400">${ev.price}</td>
-                  <td className='p-6 text-zinc-400'>{ev.location}</td>
-                  <td className="p-6 text-zinc-400">{ev.availableSeats}</td>
-                  <td className='p-6 '>
-                    <div className='flex gap-3'>
-                    <button onClick={()=>handleEdit(ev)} className='px-4 py-2 bg-cyan-500/10 text-cyan-400 rounded-lg hover:bg-cyan-500
-                    hover:text-white transition-all text-xs font-bold'>EDIT</button>
-                  <button onClick={()=>handleDelete(ev._id)} className='px-4 py-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500
-                    hover:text-white transition-all text-xs font-bold'>DELETE</button>
+                  <td className="p-4 sm:p-6 font-bold">{ev.title}</td>
+                  <td className="p-4 sm:p-6 text-cyan-400">${ev.price}</td>
+                  <td className="p-4 sm:p-6 text-zinc-400">{ev.location}</td>
+                  <td className="p-4 sm:p-6 text-zinc-400">{ev.availableSeats}</td>
+                  <td className="p-4 sm:p-6">
+                    <div className="flex gap-2">
+                      <button onClick={() => handleEdit(ev)} className="px-3 py-1.5 bg-cyan-500/10 text-cyan-400 rounded-lg hover:bg-cyan-500 hover:text-white transition-all text-xs font-bold">
+                        EDIT
+                      </button>
+                      <button onClick={() => handleDelete(ev._id)} className="px-3 py-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all text-xs font-bold">
+                        DELETE
+                      </button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>   
-             </table>
-           </div>
-          </div>
-        <div className="flex flex-col justify-center">
-          <div className="border-l-2 border-zinc-800 pl-8">
-            <h3 className="text-xl font-bold mb-4">Quick Instructions</h3>
-            <ul className="text-zinc-500 space-y-4 text-sm">
-              <li>• Fill all details to make the event live.</li>
-              <li>• Total seats will be updated in real-time.</li>
-              <li>• You can delete events from the 'Manage' section.</li>
-            </ul>
-          </div>
+          </table>
         </div>
       </div>
     </div>
