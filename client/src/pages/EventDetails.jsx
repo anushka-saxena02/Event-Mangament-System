@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import {  AnimatePresence } from 'framer-motion';
 import { useParams } from 'react-router-dom'; 
 import axios from 'axios';
 import BookingForm from '../Component/BookingForm';
@@ -44,7 +44,7 @@ const EventDetails = () => {
     
           <div className="w-full h-80 bg-zinc-900 rounded-[3rem] overflow-hidden relative border border-zinc-800">
             <img 
-              src={`https://event-mangament-system-4.onrender.com/uploads/${event.image}`} 
+              src={`http://localhost:5000/uploads/${event.image}`} 
               className="w-full h-full object-cover opacity-60" 
               alt="Event Venue" 
             />
